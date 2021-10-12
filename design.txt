@@ -1,0 +1,62 @@
+Undo -
+Undo/redo is always available, using the browsers back and forward buttons (and also os-standard hotkeys if not intercepted by some focused object).
+Additionally, the browser history and the ki1r0y history display shows every version (which are pruned to greater granularity as one goes back in time), labeled by the modification.
+This is key to allowing users to try things without fear of breaking things, and without silly "are you sure" messages.
+
+2D and 3D -
+Ki1r0y interaction design is consistent between 2D and 3D. This is accomplished by having specific interaction rules that work in both cases, built around objects that are reified visually, as if they were real-world objects. However, we also make use of the tree structure used in both 2D DOM and 3D scene graphs. Real world objects often do not have a hierarchy - is a table top the root or is one of the legs? Nonetheless, we can always construct a logical hierarchy of bounding boxes that should make sense to the user, even if some of those boxes are usually transparent. Note that this hierarchy allows us to embed a 2d content within a display in a 3d scene, or vice versa.
+
+Properties -
+Every object has an enumerable set of named properties. The values can be scalar (text, numbers) or objects (including lists).
+
+-- The next three concepts - Rules, Actions, and Models/Views - are important to the internal system architecture, but only tangentially noticed by casual users.
+They are defined here because I think that they help a UX designer understand WHY and HOW the UX is the way it is,
+but I think (hope?) that they are not so important for begining users. As a user progress from being ki1r0y consumer to becoming a ki1r0y author and even a ki1r0y
+
+Rules -
+The value of a property can always be explicitly set directly by a program or a user. However, a program can also have a rule that computes the value according to ordinary Javascript code, based on other property values. When we present a value to the user for information, we should be clear whether we are displaying a value that was input directly, or one computed from a rule. 
+Ki1r0y keeps track of what rules depend on other rules, and when some value is explicitly set - bypassing the rule - ki1r0y automatically resets every other rule that made use of the old property value. It also keeps track of when such dependencies need to be recomputed, or indeed can be recomputed.
+This automation is key to allowing behavior to be mixed and matched from one object to another, or from one composition to another, but it does come with this additional UX burden of distinguish between inputs and rules.
+(The idea of rules should not be surprising to non-programmers, as computers are pretty good at keeping track of things.
+Programmers - and particular Javascript programmers - should already be familiar with having the system keep track of the types of values, or what memory is used to store them and which needs to be cleaned up automatically when the memory usage changes.
+Similarly, users of spreadsheet programs should be familiar with the application automatically determining the order in which the forumla must be computed, and automatically recomputing forumla when anything they depend on has been changed by the user.
+Rules are similar, but go further by determining when things are calculated at all: rules are not computed until they are needed, nor until their dependencies have produced their values. If a property value is needed and some required value is not yet ready (e.g., because it is being fetched from across the network), the system will wait and automatically complete any pending rules when the data is ready.)
+
+Actions -
+Some of the properties are the names of actions that can be performed on the object (or on any descendent that doesn't itself define that action).
+The values are objects that define an action rule that is fired when the user or a program invokes the action.
+The object that implements the action is a self-contained object itself, and can be moved (or copied) to action properties of other objects.
+(A small detail that may be worth noting, is that the object embodying the action may have a name or label that does not match the property name in which it is stored. E.g., the "select" property might have a value named, "beep", or "turn blue".
+
+Models and Views -
+
+
+
+Dualities -
+While everything can be changed, most people won't want to. Designing interactions is hard, and usually not the principle thing that a ki1r0y user is trying to accomplish when they develop something new, or when they tinker with an existing thing. So the interaction has to work, and stay working even as people incrementally evolve something of their own. Part of the answer for this is to have just a few universal ideas, but multiple ways of doing things.
+Meanwhile, we feel that configuration of options or preferences are to be avoided: if the designer doesn't know what the right behavior is, how is the user supposed to know? Instead, when there is a more-or-less even choice between two or more ways of doing something, we aim to provide both. This duality also gives us an out: instead of having to design a single interaction that works in all cases, having multiple ways takes the pressure off such that each way can be tailored to work better in a particular situation.
+Finally, we try to avoid behavior modes as much as avoiding preferences. Insteading of latching users into a sticky "edit" mode vs "play" or "user" mode, our users may use a gesture to activate a short-lived "mode" that reveals edit or inspect options that are not normally shown, that springs back to "normal". Such operation isn't wholly different behavior, but rather the exposure of some affordances that aren't important in casual use.
+
+Intentional authoring -
+- Inspect - Each composition defines an inspector for an object, which by default displays a text-heavy version of every property of the object, and allows the user to change the value.
+  All property value displays (scalar or object) can be grabbed (see below) and are drop targets. (E.g., another value can be dropped on the display to change the value of that property.)
+  Scalar values can be changed directly, with immediate effect on the object. (Remember that undo is always available.)
+  Object values can themselves be inspected. The object parent and each child is accessible as a property (and so the inspector can be used to traverse the tree structure).
+  If an object value defines an icon, that icon is displayed next to the property name in the inspector.
+  Inspect is also an action that puts the target object in the composition's inspector. This may be dedicated real-estate, or a pop-up surface, etc. (But note that any pop-up must stay visible when there are interactions off the surface, so that other objects can be dragged in/out. The pop-up inspector should then be moveable and explicitly dismissable.)
+- GoTo - There are avatars, in both 2D and 3D, and so a user can communicate their interest in an object by going to it, by invoking the "goTo" action property. In 3D, this would position the user so that the object fills the main display. In 2D, the object scrolls to the top, and the avatar is positioned alongside it in the margin.
+- Halo - 
+An object defines a halo of affordances for deep editing and inspection. Typically, this includes:
+- handles on the corners of the bounding box that can be dragged to resize or rotate relative to the stationary opposite corner,
+- a grab handle (see below)
+- 
+
+Selection - Every visible object in the heirarchy can be "pointed at", whether in 2D or 3D. 
+Some objects are background surfaces, or "nothing", that the user does not normally interact with (e.g., when not "world building").
+
+
+
+
+The term drag and drop can be ambiguous, with UX blogs fretting about the many different kinds and purposes of dragging. We define just two operations, with the specific terms "grab" and "adjust".
+
+Grab picks up an object up and moves, copies, or links it as a whole to some drop target object in a distinct, cancellable, and reversable action. The in-progress positions have no meaning. This corresponds to the purpose and behavior of the HTML Drag and Drop API: the UX and cross-app, operating-system supported behavior matches well. We supplement this with some additional cues, such as the grabbed cursor during movement
